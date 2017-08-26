@@ -1,0 +1,55 @@
+MODULE main
+VAR
+s1valid : boolean;
+s2valid : boolean;
+s3valid : boolean;
+ab : boolean;
+ac : boolean;
+bc : boolean;
+
+act : 60 .. 300;
+s1 : 0 .. 400;
+s2 : 0 .. 400;
+s3 : 0 .. 400;
+er1 : -3 .. 3;
+er2 : -3 .. 3;
+er3 : -40 .. 40;
+voted : 0 .. 400;
+totalv : 0 .. 3;
+
+
+
+ASSIGN
+s1 := act+er1;
+s2 := act+er2;
+s3 := act+er3;
+
+ab := s1valid & s2valid & abs(s1 - s2) <= 6;
+ac := s1valid & s3valid & abs(s1 - s3) <= 6;
+bc := s2valid & s3valid & abs(s2 - s3) <= 6;
+
+voted := case
+!ab & !ac & !bc : 0;
+!ab & !ac & bc : (s2+s3)/2; 
+!ab & ac & !bc : (s1+s3)/2;
+!ab & ac & bc : s3;
+ab & !ac & !bc : (s1+s2)/2;
+ab & !ac & bc : s2; 
+ab & ac & !bc : s1;
+ab & ac & bc : (s1+s2+s3)/3;
+TRUE : 0;
+esac;
+
+totalv := case
+!ab & !ac & !bc : 0;
+!ab & !ac & bc : toint(s2valid)+toint(s3valid); 
+!ab & ac & !bc : toint(s1valid)+toint(s3valid);
+!ab & ac & bc : toint(s1valid)+toint(s2valid)+1;
+ab & !ac & !bc : toint(s1valid)+toint(s2valid);
+ab & !ac & bc : toint(s1valid)+toint(s2valid)+1; 
+ab & ac & !bc : toint(s2valid)+toint(s3valid)+1;
+ab & ac & bc : 3;
+TRUE : 0;
+esac;
+
+LTLSPEC G ((totalv >= 2) -> ( abs(voted - act) <= 6 ))

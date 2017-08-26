@@ -1,0 +1,92 @@
+nt = 8 ; nc = 1 ;
+Tr = zeros(nt,1); C = zeros(nc,1);
+for i = 1:nt; Tr(i) = u(i,1); end  % Assign triggers from input U
+for i = 1:nc; C(i) = u(i+nt,1); end % Assign conditions from input U
+INTER = u(10,1);
+LEVEL = u(11,1);
+SPREAD = u(12,1);
+FIRE = u(13,1);
+% Assign the trigger to one based on priority
+% Add additonal conditions to enable triggers here
+TRIG = 0;
+if  Tr(1) == 1, TRIG = 1;  % UP
+elseif  Tr(2) == 1, TRIG = 2;  % ENT
+elseif  Tr(3) == 1, TRIG = 3;  % XT
+elseif  Tr(4) == 1, TRIG = 4;  % ET
+elseif  Tr(5) == 1, TRIG = 5;  % BT
+elseif  Tr(6) == 1, TRIG = 6;  % TIM8
+elseif  Tr(7) == 1, TRIG = 7;  % RESET
+elseif  Tr(8) == 1, TRIG = 8;  % TICK
+end
+% 1) If in State EDIT AND Trigger XT occurs THEN transit to XBDATAE if condition C1 is True
+if  (INTER == 1) && (TRIG == 3) && (C(1) == 1) ; INTER = 4;
+% 2) If in State EDIT AND Trigger ET occurs THEN transit to EBDATAE if condition C1 is True
+elseif  (INTER == 1) && (TRIG == 4) && (C(1) == 1) ; INTER = 2;
+% 3) If in State EBDATAE AND Trigger UP occurs THEN transit to EDIT if condition C1 is True
+elseif  (INTER == 2) && (TRIG == 1) && (C(1) == 1) ; INTER = 1;
+% 4) If in State EBDATAE AND Trigger ENT occurs THEN transit to EBDATAD if condition C1 is True
+elseif  (INTER == 2) && (TRIG == 2) && (C(1) == 1) ; INTER = 3;
+% 5) If in State EBDATAD AND Trigger UP occurs THEN transit to EBDATAE if condition C1 is True
+elseif  (INTER == 3) && (TRIG == 1) && (C(1) == 1) ; INTER = 2;
+% 6) If in State EBDATAD AND Trigger BT occurs THEN transit to TADMIN if condition C1 is True
+elseif  (INTER == 3) && (TRIG == 5) && (C(1) == 1) ; INTER = 6;
+% 7) If in State XBDATAE AND Trigger UP occurs THEN transit to EDIT if condition C1 is True
+elseif  (INTER == 4) && (TRIG == 1) && (C(1) == 1) ; INTER = 1;
+% 8) If in State XBDATAE AND Trigger ENT occurs THEN transit to XBDATAD if condition C1 is True
+elseif  (INTER == 4) && (TRIG == 2) && (C(1) == 1) ; INTER = 5;
+% 9) If in State XBDATAD AND Trigger UP occurs THEN transit to XBDATAE if condition C1 is True
+elseif  (INTER == 5) && (TRIG == 1) && (C(1) == 1) ; INTER = 4;
+% 10) If in State XBDATAD AND Trigger BT occurs THEN transit to TADMIN if condition C1 is True
+elseif  (INTER == 5) && (TRIG == 5) && (C(1) == 1) ; INTER = 6;
+% 11) If in State TADMIN AND Trigger ENT occurs THEN transit to EDIT if condition C1 is True
+elseif  (INTER == 6) && (TRIG == 2) && (C(1) == 1) ; INTER = 1;
+end     
+%   ================================================
+  
+% 12) If in State NEITHER AND Trigger XT occurs THEN transit to XB if condition C1 is True
+if  (LEVEL == 1) && (TRIG == 3) && (C(1) == 1) ; LEVEL = 2;
+% 13) If in State NEITHER AND Trigger ET occurs THEN transit to EB if condition C1 is True
+elseif  (LEVEL == 1) && (TRIG == 4) && (C(1) == 1) ; LEVEL = 3;
+% 14) If in State XB AND Trigger ET occurs THEN transit to X2E if condition C1 is True
+elseif  (LEVEL == 2) && (TRIG == 4) && (C(1) == 1) ; LEVEL = 4;
+% 15) If in State XB AND Trigger RESET occurs THEN transit to NEITHER if condition C1 is True
+elseif  (LEVEL == 2) && (TRIG == 7) && (C(1) == 1) ; LEVEL = 1;
+% 16) If in State EB AND Trigger XT occurs THEN transit to E2X if condition C1 is True
+elseif  (LEVEL == 3) && (TRIG == 3) && (C(1) == 1) ; LEVEL = 5;
+% 17) If in State EB AND Trigger RESET occurs THEN transit to NEITHER if condition C1 is True
+elseif  (LEVEL == 3) && (TRIG == 7) && (C(1) == 1) ; LEVEL = 1;
+% 18) If in State X2E AND Trigger TICK occurs THEN transit to EB if condition C1 is True
+elseif  (LEVEL == 4) && (TRIG == 8) && (C(1) == 1) ; LEVEL = 3;
+% 19) If in State E2X AND Trigger TICK occurs THEN transit to XB if condition C1 is True
+elseif  (LEVEL == 5) && (TRIG == 8) && (C(1) == 1) ; LEVEL = 2;
+end     
+%   ================================================
+  
+% 20) If in State INPLACE AND Trigger ET occurs THEN transit to MOVOUT if condition C1 is True
+if  (SPREAD == 1) && (TRIG == 4) && (C(1) == 1) ; SPREAD = 2;
+% 21) If in State MOVOUT AND Trigger XT occurs THEN transit to MOVIN if condition C1 is True
+elseif  (SPREAD == 2) && (TRIG == 3) && (C(1) == 1) ; SPREAD = 4;
+% 22) If in State MOVOUT AND Trigger TIM8 occurs THEN transit to OUTPLACE if condition C1 is True
+elseif  (SPREAD == 2) && (TRIG == 6) && (C(1) == 1) ; SPREAD = 3;
+% 23) If in State OUTPLACE AND Trigger XT occurs THEN transit to MOVIN if condition C1 is True
+elseif  (SPREAD == 3) && (TRIG == 3) && (C(1) == 1) ; SPREAD = 4;
+% 24) If in State MOVIN AND Trigger ET occurs THEN transit to MOVOUT if condition C1 is True
+elseif  (SPREAD == 4) && (TRIG == 4) && (C(1) == 1) ; SPREAD = 2;
+% 25) If in State MOVIN AND Trigger TIM8 occurs THEN transit to INPLACE if condition C1 is True
+elseif  (SPREAD == 4) && (TRIG == 6) && (C(1) == 1) ; SPREAD = 1;
+end     
+%   ================================================
+  
+% 26) If in State WAIT AND Trigger BT occurs THEN transit to FIRED if condition C1 is True
+if  (FIRE == 1) && (TRIG == 5) && (C(1) == 1) ; FIRE = 2;
+% 27) If in State FIRED AND Trigger TICK occurs THEN transit to WAIT if condition C1 is True
+elseif  (FIRE == 2) && (TRIG == 8) && (C(1) == 1) ; FIRE = 1;
+end     
+%   ================================================
+  
+% ============== Set the outputs ===========
+y = zeros(4,1);
+y(1) = INTER;
+y(2) = LEVEL;
+y(3) = SPREAD;
+y(4) = FIRE;

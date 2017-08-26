@@ -1,0 +1,139 @@
+MODULE main
+VAR
+UP:boolean;
+ENT:boolean;
+XT:boolean;
+ET:boolean;
+BT:boolean;
+TIM8:boolean;
+RESET:boolean;
+TICK:boolean;
+  
+C1:boolean;
+  
+TRIG:{0
+,1
+,2
+,3
+,4
+,5
+,6
+,7
+,8
+};
+INTER:{
+EDIT,
+EBDATAE,
+EBDATAD,
+XBDATAE,
+XBDATAD,
+TADMIN };
+LEVEL:{
+NEITHER,
+XB,
+EB,
+X2E,
+E2X };
+SPREAD:{
+INPLACE,
+MOVOUT,
+OUTPLACE,
+MOVIN };
+FIRE:{
+WAIT,
+FIRED };
+   
+ASSIGN
+init(INTER) :=EDIT;
+init(LEVEL) :=NEITHER;
+init(SPREAD) :=INPLACE;
+init(FIRE) :=WAIT;
+   
+-- Add additonal conditions to set the triggers
+TRIG := case
+UP = TRUE :1;
+ENT = TRUE :2;
+XT = TRUE :3;
+ET = TRUE :4;
+BT = TRUE :5;
+TIM8 = TRUE :6;
+RESET = TRUE :7;
+TICK = TRUE :8;
+TRUE :0;
+esac;
+  
+next(INTER):=case
+--1) If in State EDIT AND Trigger XT occurs THEN transit to XBDATAE if condition C1 Is TRUE
+INTER = EDIT & (TRIG = 3) & C1 : XBDATAE;
+--2) If in State EDIT AND Trigger ET occurs THEN transit to EBDATAE if condition C1 Is TRUE
+INTER = EDIT & (TRIG = 4) & C1 : EBDATAE;
+--3) If in State EBDATAE AND Trigger UP occurs THEN transit to EDIT if condition C1 Is TRUE
+INTER = EBDATAE & (TRIG = 1) & C1 : EDIT;
+--4) If in State EBDATAE AND Trigger ENT occurs THEN transit to EBDATAD if condition C1 Is TRUE
+INTER = EBDATAE & (TRIG = 2) & C1 : EBDATAD;
+--5) If in State EBDATAD AND Trigger UP occurs THEN transit to EBDATAE if condition C1 Is TRUE
+INTER = EBDATAD & (TRIG = 1) & C1 : EBDATAE;
+--6) If in State EBDATAD AND Trigger BT occurs THEN transit to TADMIN if condition C1 Is TRUE
+INTER = EBDATAD & (TRIG = 5) & C1 : TADMIN;
+--7) If in State XBDATAE AND Trigger UP occurs THEN transit to EDIT if condition C1 Is TRUE
+INTER = XBDATAE & (TRIG = 1) & C1 : EDIT;
+--8) If in State XBDATAE AND Trigger ENT occurs THEN transit to XBDATAD if condition C1 Is TRUE
+INTER = XBDATAE & (TRIG = 2) & C1 : XBDATAD;
+--9) If in State XBDATAD AND Trigger UP occurs THEN transit to XBDATAE if condition C1 Is TRUE
+INTER = XBDATAD & (TRIG = 1) & C1 : XBDATAE;
+--10) If in State XBDATAD AND Trigger BT occurs THEN transit to TADMIN if condition C1 Is TRUE
+INTER = XBDATAD & (TRIG = 5) & C1 : TADMIN;
+--11) If in State TADMIN AND Trigger ENT occurs THEN transit to EDIT if condition C1 Is TRUE
+INTER = TADMIN & (TRIG = 2) & C1 : EDIT;
+TRUE :INTER;
+esac;
+  
+next(LEVEL):=case
+--12) If in State NEITHER AND Trigger XT occurs THEN transit to XB if condition C1 Is TRUE
+LEVEL = NEITHER & (TRIG = 3) & C1 : XB;
+--13) If in State NEITHER AND Trigger ET occurs THEN transit to EB if condition C1 Is TRUE
+LEVEL = NEITHER & (TRIG = 4) & C1 : EB;
+--14) If in State XB AND Trigger ET occurs THEN transit to X2E if condition C1 Is TRUE
+LEVEL = XB & (TRIG = 4) & C1 : X2E;
+--15) If in State XB AND Trigger RESET occurs THEN transit to NEITHER if condition C1 Is TRUE
+LEVEL = XB & (TRIG = 7) & C1 : NEITHER;
+--16) If in State EB AND Trigger XT occurs THEN transit to E2X if condition C1 Is TRUE
+LEVEL = EB & (TRIG = 3) & C1 : E2X;
+--17) If in State EB AND Trigger RESET occurs THEN transit to NEITHER if condition C1 Is TRUE
+LEVEL = EB & (TRIG = 7) & C1 : NEITHER;
+--18) If in State X2E AND Trigger TICK occurs THEN transit to EB if condition C1 Is TRUE
+LEVEL = X2E & (TRIG = 8) & C1 : EB;
+--19) If in State E2X AND Trigger TICK occurs THEN transit to XB if condition C1 Is TRUE
+LEVEL = E2X & (TRIG = 8) & C1 : XB;
+TRUE :LEVEL;
+esac;
+  
+next(SPREAD):=case
+--20) If in State INPLACE AND Trigger ET occurs THEN transit to MOVOUT if condition C1 Is TRUE
+SPREAD = INPLACE & (TRIG = 4) & C1 : MOVOUT;
+--21) If in State MOVOUT AND Trigger XT occurs THEN transit to MOVIN if condition C1 Is TRUE
+SPREAD = MOVOUT & (TRIG = 3) & C1 : MOVIN;
+--22) If in State MOVOUT AND Trigger TIM8 occurs THEN transit to OUTPLACE if condition C1 Is TRUE
+SPREAD = MOVOUT & (TRIG = 6) & C1 : OUTPLACE;
+--23) If in State OUTPLACE AND Trigger XT occurs THEN transit to MOVIN if condition C1 Is TRUE
+SPREAD = OUTPLACE & (TRIG = 3) & C1 : MOVIN;
+--24) If in State MOVIN AND Trigger ET occurs THEN transit to MOVOUT if condition C1 Is TRUE
+SPREAD = MOVIN & (TRIG = 4) & C1 : MOVOUT;
+--25) If in State MOVIN AND Trigger TIM8 occurs THEN transit to INPLACE if condition C1 Is TRUE
+SPREAD = MOVIN & (TRIG = 6) & C1 : INPLACE;
+TRUE :SPREAD;
+esac;
+  
+next(FIRE):=case
+--26) If in State WAIT AND Trigger BT occurs THEN transit to FIRED if condition C1 Is TRUE
+FIRE = WAIT & (TRIG = 5) & C1 : FIRED;
+--27) If in State FIRED AND Trigger TICK occurs THEN transit to WAIT if condition C1 Is TRUE
+FIRE = FIRED & (TRIG = 8) & C1 : WAIT;
+TRUE :FIRE;
+esac;
+  
+  
+-- ==============
+  
+-- Put LTLSPEC here - Example
+-- LTLSPEC G (( M1 = M1_S5 ) -> M2 = M2_S2)
